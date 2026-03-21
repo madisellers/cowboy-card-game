@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Splines;
+using UnityEngine.U2D;
 
 public class PlayerHand : MonoBehaviour
 {
     private const float MAX_HAND_ANGLE_DEG = 90;
+    private const float MAX_CARD_SPACING = 1f;
 
     public List<GameObject> cardObjects;
 
@@ -14,7 +16,7 @@ public class PlayerHand : MonoBehaviour
     [SerializeField] private SplineContainer splineContainer;
     [SerializeField] private Camera mainCamera;
 
-    private int ghostCardIndex;
+    private int ghostCardIndex = -1;
 
     private bool evenNumObj => cardObjects.Count % 2 == 0 ? true : false;
 
@@ -29,7 +31,7 @@ public class PlayerHand : MonoBehaviour
 
     private void DrawCard()
     {
-        GameObject card = Instantiate(cardPrefab, splineContainer.gameObject.transform);
+        GameObject card = Instantiate(cardPrefab);
         cardObjects.Add(card);
         CardObject co = card.GetComponent<CardObject>();
         co.SetUp(CardRank.Four, CardSuit.Hearts);
@@ -38,22 +40,57 @@ public class PlayerHand : MonoBehaviour
 
     public void UpdateCardPositions()
     {
-        float cardSpacing = 1f;
-        float firstCardPosition = 0.5f - (cardObjects.Count - 1f) * cardSpacing * 2;
-        Spline spline = splineContainer.Spline;
         float startZ = 0;
-        for (int i = 0; i < cardObjects.Count; i++)
+
+        float totalLength = splineContainer.CalculateLength(0);
+        float spacing = totalLength / cardObjects.Count;
+        spacing = spacing < MAX_CARD_SPACING ? spacing : MAX_CARD_SPACING;
+
+        //int[] poses = new int[cardObjects.Count];
+        if (cardObjects.Count % 2 == 0)
         {
-            float p = firstCardPosition + i * cardSpacing;
-            Vector3 splinePosition = spline.EvaluatePosition(p);
-            Vector3 forward = spline.EvaluateTangent(p);
-            Vector3 up = spline.EvaluateUpVector(p);
-            Quaternion rotation = Quaternion.LookRotation(up, Vector3.Cross(up, forward).normalized);
-            //cardObjects[i].transform.DOMove(splinePosition, 0.25f);
-            //cardObjects[i].transform.DOLocalRotateQuaternion(RotationDriveMode, 0.25f);
-            splinePosition.z = startZ + 0.01f * i;
-            cardObjects[i].transform.position = splinePosition;
-            //cardObjects[i].transform.rotation = Quaternion.
+            float middlePos = totalLength / 2;
+            int numCardsOnSide = cardObjects.Count - (cardObjects.Count / 2) + 1;
+            int multiplier = -numCardsOnSide;
+            for (int i = 0; i < cardObjects.Count; i++)
+            {
+                float position = (middlePos + spacing * multiplier) / totalLength;
+                Vector3 splinePosition = splineContainer.EvaluatePosition(position);
+                splinePosition.z = startZ + 0.01f * i;
+                Vector3 forward = splineContainer.EvaluateTangent(position);
+                Vector3 up = splineContainer.EvaluateUpVector(position);
+                Quaternion rotation = Quaternion.LookRotation(up, Vector3.Cross(up, forward).normalized);
+
+                //Set up the card
+                cardObjects[i].transform.position = splinePosition;
+
+                //Update values
+                multiplier++;
+
+            }
+        }
+        else
+        {
+            float middlePos = (totalLength / 2) - (spacing / 2);
+            int numCardsOnSide = cardObjects.Count / 2;
+            int multiplier = -numCardsOnSide;
+
+            for (int i = 0; i < cardObjects.Count; i++)
+            {
+                float position = (middlePos + spacing * multiplier) / totalLength;
+                Vector3 splinePosition = splineContainer.EvaluatePosition(position);
+                splinePosition.z = startZ + 0.01f * i;
+                Vector3 forward = splineContainer.EvaluateTangent(position);
+                Vector3 up = splineContainer.EvaluateUpVector(position);
+                Quaternion rotation = Quaternion.LookRotation(up, Vector3.Cross(up, forward).normalized);
+
+                //Set up the card
+                cardObjects[i].transform.position = splinePosition;
+
+                //Update values
+                multiplier++;
+
+            }
         }
     }
 
@@ -86,13 +123,15 @@ public class PlayerHand : MonoBehaviour
 
     private void DestroyGhostCard()
     {
+        if (cardObjects.Count == 0) return;
         Destroy(cardObjects[ghostCardIndex]);
+        cardObjects.RemoveAt(ghostCardIndex);
         ghostCardIndex = -1;
     }
 
     private void AddGhostCard(int index)
     {
-        GameObject go = Instantiate(ghostCardPrefab, splineContainer.gameObject.transform);
+        GameObject go = Instantiate(ghostCardPrefab);
         cardObjects.Insert(index, go);
         ghostCardIndex = index;
     }
