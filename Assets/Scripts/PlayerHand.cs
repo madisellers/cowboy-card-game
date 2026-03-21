@@ -16,7 +16,7 @@ public class PlayerHand : MonoBehaviour
     [SerializeField] private SplineContainer splineContainer;
     [SerializeField] private Camera mainCamera;
 
-    private int ghostCardIndex = -1;
+    public int ghostCardIndex = -1;
 
     private bool evenNumObj => cardObjects.Count % 2 == 0 ? true : false;
 
@@ -24,6 +24,11 @@ public class PlayerHand : MonoBehaviour
     {
         CheckGhostCardPlacement();
         if (Input.GetKeyDown(KeyCode.Space))
+        {
+            AddCard(CardRank.Two, CardSuit.Spades, ghostCardIndex);
+            //ghostCardIndex++;
+        }
+        if (Input.GetKeyDown(KeyCode.S))
         {
             DrawCard();
         }
@@ -38,6 +43,33 @@ public class PlayerHand : MonoBehaviour
         UpdateCardPositions();
     }
 
+    private void AddCard(CardRank rank, CardSuit suit, int index)
+    {
+        GameObject card = Instantiate(cardPrefab);
+        
+        CardObject co = card.GetComponent<CardObject>();
+        co.SetUp(rank, suit);
+        if (index == ghostCardIndex)
+        {
+            DestroyGhostCard();
+            if (index > cardObjects.Count)
+            {
+                cardObjects.Add(card);
+            }
+            else
+            {
+                cardObjects.Insert(index, card);
+            }
+        }
+        else
+        {
+            cardObjects.Insert(index, card);
+            ghostCardIndex = ghostCardIndex > index ? ghostCardIndex + 1 : ghostCardIndex;
+        }
+            
+        UpdateCardPositions();
+    }
+
     public void UpdateCardPositions()
     {
         float startZ = 0;
@@ -47,16 +79,16 @@ public class PlayerHand : MonoBehaviour
         spacing = spacing < MAX_CARD_SPACING ? spacing : MAX_CARD_SPACING;
 
         //int[] poses = new int[cardObjects.Count];
-        if (cardObjects.Count % 2 == 0)
+        if (cardObjects.Count % 2 == 1)
         {
             float middlePos = totalLength / 2;
-            int numCardsOnSide = cardObjects.Count - (cardObjects.Count / 2) + 1;
+            int numCardsOnSide = cardObjects.Count - ((cardObjects.Count / 2) + 1);
             int multiplier = -numCardsOnSide;
             for (int i = 0; i < cardObjects.Count; i++)
             {
                 float position = (middlePos + spacing * multiplier) / totalLength;
                 Vector3 splinePosition = splineContainer.EvaluatePosition(position);
-                splinePosition.z = startZ + 0.01f * i;
+                splinePosition.z = startZ - 0.01f * i;
                 Vector3 forward = splineContainer.EvaluateTangent(position);
                 Vector3 up = splineContainer.EvaluateUpVector(position);
                 Quaternion rotation = Quaternion.LookRotation(up, Vector3.Cross(up, forward).normalized);
@@ -79,7 +111,7 @@ public class PlayerHand : MonoBehaviour
             {
                 float position = (middlePos + spacing * multiplier) / totalLength;
                 Vector3 splinePosition = splineContainer.EvaluatePosition(position);
-                splinePosition.z = startZ + 0.01f * i;
+                splinePosition.z = startZ - 0.01f * i;
                 Vector3 forward = splineContainer.EvaluateTangent(position);
                 Vector3 up = splineContainer.EvaluateUpVector(position);
                 Quaternion rotation = Quaternion.LookRotation(up, Vector3.Cross(up, forward).normalized);
@@ -96,10 +128,6 @@ public class PlayerHand : MonoBehaviour
 
     private void CheckGhostCardPlacement()
     {
-        //Check can have ghost card
-        //Get mouse position
-        //Check if resonable near card spline 
-
         //Compare mouse X to card placement
         Vector3 mouseScreenPosition = Input.mousePosition;
 
@@ -111,19 +139,24 @@ public class PlayerHand : MonoBehaviour
         Vector3 worldPosition = mainCamera.ScreenToWorldPoint(mouseScreenPosition);
 
         // For 2D games, you might want to force the Z to 0
-        // worldPosition.z = 0f; 
+        worldPosition.z = 0f; 
         float mouseX = worldPosition.x;
         int replaceIndex = FindGhostCardIndex(mouseX);
+        Debug.Log(mouseX);
+        //Debug.Log(replaceIndex);
         if (replaceIndex == ghostCardIndex) return;
 
         //If current ghost card placement doesnt match where mouse is, delete it and create new one where mouse is
+        Debug.Log("Making new ghost card at i == " + replaceIndex);
         DestroyGhostCard();
         AddGhostCard(replaceIndex);
+        UpdateCardPositions();
     }
 
     private void DestroyGhostCard()
     {
         if (cardObjects.Count == 0) return;
+        if (ghostCardIndex < 0) return;
         Destroy(cardObjects[ghostCardIndex]);
         cardObjects.RemoveAt(ghostCardIndex);
         ghostCardIndex = -1;
@@ -142,19 +175,20 @@ public class PlayerHand : MonoBehaviour
         int mouseCardIndex = 0;
         for (int i = 0; i < cardObjects.Count; i++)
         {
-            //Skip the ghost card
-            if (i == ghostCardIndex) continue;
             float cardX = cardObjects[i].transform.position.x;
             bool mouseAfterCard = mouseX > cardX;
             //Mouse after last card
             if (i == cardObjects.Count - 1 && mouseAfterCard)
             {
+                Debug.Log("Mouse after last card.");
                 return i;
             }
             //Check if mouse is after current card card
             if (mouseAfterCard) continue;
 
             //if mouse before card, return the current index (card to be pushed forward)
+            Debug.Log("Mouse before card. i == " + i);
+
             return i;
 
         }
