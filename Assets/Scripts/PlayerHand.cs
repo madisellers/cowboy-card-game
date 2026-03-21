@@ -66,7 +66,7 @@ public class PlayerHand : MonoBehaviour
 
         //If current ghost card placement doesnt match where mouse is, delete it and create new one where mouse is
         DestroyGhostCard();
-        AddGhostCard();
+        AddGhostCard(replaceIndex);
     }
 
     private void DestroyGhostCard()
