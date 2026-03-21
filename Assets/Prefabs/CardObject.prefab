@@ -480,7 +480,7 @@ Transform:
   m_GameObject: {fileID: 7790158686785855920}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.001}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -575,12 +575,12 @@ Transform:
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 1
   m_Children:
-  - {fileID: 774658564048467851}
   - {fileID: 9096126687138397028}
   - {fileID: 718438155909921402}
   - {fileID: 4144064635997985569}
   - {fileID: 3814556859584896088}
   - {fileID: 231596085520713794}
+  - {fileID: 774658564048467851}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1258149326958410118
@@ -604,6 +604,9 @@ MonoBehaviour:
   spadeLogo: {fileID: -3604457061158422176, guid: b8c5ead49b164264db3da927c82148de, type: 3}
   clubLogo: {fileID: 2852610726315664299, guid: ecc927550a0c17a4bbd378561b9961c6, type: 3}
   diamondLogo: {fileID: 6586461156150141773, guid: 3970416694117ae49aad9c5cf9f59add, type: 3}
+  kingLogo: {fileID: -1724822148711148119, guid: 85776cf0627d44347b7bd74cb8c3e795, type: 3}
+  queenLogo: {fileID: 6851498383279292439, guid: 5c88c23d45e6a19458be18b2d4c6a993, type: 3}
+  jackLogo: {fileID: -618900924579114579, guid: 8583c3d711ab3094a9577e2e2444e08d, type: 3}
 --- !u!1 &8943694536126856236
 GameObject:
   m_ObjectHideFlags: 0

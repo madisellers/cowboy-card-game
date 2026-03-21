@@ -13,6 +13,9 @@ public class CardObject : MonoBehaviour
     [SerializeField] private Sprite spadeLogo;
     [SerializeField] private Sprite clubLogo;
     [SerializeField] private Sprite diamondLogo;
+    [SerializeField] private Sprite kingLogo;
+    [SerializeField] private Sprite queenLogo;
+    [SerializeField] private Sprite jackLogo;
 
     public void SetUp(CardRank rank, CardSuit suit)
     {
@@ -42,6 +45,19 @@ public class CardObject : MonoBehaviour
                 break;
             default:
                 break;
+        }
+
+        if (rank == CardRank.King)
+        {
+            logoPos3.sprite = kingLogo;
+        }
+        else if (rank == CardRank.Queen)
+        {
+            logoPos3.sprite = queenLogo;
+        }
+        else if (rank == CardRank.Jack)
+        {
+            logoPos3.sprite = jackLogo;
         }
 
         rank1.text = rank.ToString();

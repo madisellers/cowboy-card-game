@@ -25,8 +25,7 @@ public class PlayerHand : MonoBehaviour
         CheckGhostCardPlacement();
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            AddCard(CardRank.Two, CardSuit.Spades, ghostCardIndex);
-            //ghostCardIndex++;
+            AddCard(CardRank.King, CardSuit.Spades, ghostCardIndex);
         }
         if (Input.GetKeyDown(KeyCode.S))
         {
@@ -39,7 +38,7 @@ public class PlayerHand : MonoBehaviour
         GameObject card = Instantiate(cardPrefab);
         cardObjects.Add(card);
         CardObject co = card.GetComponent<CardObject>();
-        co.SetUp(CardRank.Four, CardSuit.Hearts);
+        co.SetUp(CardRank.Queen, CardSuit.Hearts);
         UpdateCardPositions();
     }
 
