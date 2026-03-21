@@ -9,9 +9,10 @@ public class PlayerHand : MonoBehaviour
     public List<GameObject> cardObjects;
 
     [Header("References")]
+    [SerializeField] private GameObject cardPrefab;
     [SerializeField] private GameObject ghostCardPrefab;
     [SerializeField] private SplineContainer splineContainer;
-    [SerializeField] private GameObject cardPrefab;
+    [SerializeField] private Camera mainCamera;
 
     private int ghostCardIndex;
 
@@ -29,8 +30,9 @@ public class PlayerHand : MonoBehaviour
     private void DrawCard()
     {
         GameObject card = Instantiate(cardPrefab);
+        cardObjects.Add(card);
         CardObject co = card.GetComponent<CardObject>();
-        co.SetUp();
+        co.SetUp(CardRank.Four, CardSuit.Hearts);
         UpdateCardPositions();
     }
 
@@ -60,7 +62,18 @@ public class PlayerHand : MonoBehaviour
         //Check if resonable near card spline 
 
         //Compare mouse X to card placement
-        float mouseX;
+        Vector3 mouseScreenPosition = Input.mousePosition;
+
+        // Set the Z value to a desired distance from the camera (e.g., 10 units)
+        // or set to Camera.main.nearClipPlane for a close point
+        mouseScreenPosition.z = 10f;
+
+        // Convert the screen position to world space
+        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(mouseScreenPosition);
+
+        // For 2D games, you might want to force the Z to 0
+        // worldPosition.z = 0f; 
+        float mouseX = worldPosition.x;
         int replaceIndex = FindGhostCardIndex(mouseX);
         if (replaceIndex == ghostCardIndex) return;
 
@@ -71,7 +84,7 @@ public class PlayerHand : MonoBehaviour
 
     private void DestroyGhostCard()
     {
-        Destroy(cardObjects[ghostCardIndex];
+        Destroy(cardObjects[ghostCardIndex]);
         ghostCardIndex = -1;
     }
 
