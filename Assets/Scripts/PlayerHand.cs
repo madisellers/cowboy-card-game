@@ -29,7 +29,7 @@ public class PlayerHand : MonoBehaviour
 
     private void DrawCard()
     {
-        GameObject card = Instantiate(cardPrefab);
+        GameObject card = Instantiate(cardPrefab, splineContainer.gameObject.transform);
         cardObjects.Add(card);
         CardObject co = card.GetComponent<CardObject>();
         co.SetUp(CardRank.Four, CardSuit.Hearts);
@@ -41,6 +41,7 @@ public class PlayerHand : MonoBehaviour
         float cardSpacing = 1f;
         float firstCardPosition = 0.5f - (cardObjects.Count - 1f) * cardSpacing * 2;
         Spline spline = splineContainer.Spline;
+        float startZ = 0;
         for (int i = 0; i < cardObjects.Count; i++)
         {
             float p = firstCardPosition + i * cardSpacing;
@@ -50,6 +51,7 @@ public class PlayerHand : MonoBehaviour
             Quaternion rotation = Quaternion.LookRotation(up, Vector3.Cross(up, forward).normalized);
             //cardObjects[i].transform.DOMove(splinePosition, 0.25f);
             //cardObjects[i].transform.DOLocalRotateQuaternion(RotationDriveMode, 0.25f);
+            splinePosition.z = startZ + 0.01f * i;
             cardObjects[i].transform.position = splinePosition;
             //cardObjects[i].transform.rotation = Quaternion.
         }
@@ -90,7 +92,7 @@ public class PlayerHand : MonoBehaviour
 
     private void AddGhostCard(int index)
     {
-        GameObject go = Instantiate(ghostCardPrefab);
+        GameObject go = Instantiate(ghostCardPrefab, splineContainer.gameObject.transform);
         cardObjects.Insert(index, go);
         ghostCardIndex = index;
     }
