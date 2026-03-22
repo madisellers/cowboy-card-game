@@ -19,8 +19,6 @@ When you ask for a card that they don't have ('Go fish'), you draw a random card
 
 ## Cheating
 
-While you might be a fine cowboy, you don't mind a little cheating now and then. When you're doing it, of course. 
-
-You can take an extra card at the end of your turn. Or, when asked for a card, you could be less than truthful about whether you have it. 
+While you might be a fine cowboy, you don't mind a little cheating now and then. When you're doing it, of course. When asked for a card, you can be less than truthful about whether you have it. 
 
 Be careful, though. If your opponent catches on, they won't be very happy. And keep an eye out yourself; you never know what your opponent could do.
