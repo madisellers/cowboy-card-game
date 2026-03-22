@@ -320,6 +320,11 @@ public class CheatManager : MonoBehaviour
         currentTurn.pairDropped = (i, j);
     }
 
+    public int GetCurrentTurnAddedCardIndex()
+    {
+        return currentTurn.addedCardIndex;
+    }
+
     //---------------------Debug methods (DO NOT USE FOR GAME PURPOSES-------------------------------
     public Turn GetPrevTurn()
     {

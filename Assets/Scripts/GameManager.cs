@@ -10,10 +10,12 @@ public class GameManager : MonoBehaviour
     public CowboyState leadState;
     public CowboyState oppositeState;
     public TurnPhase turnPhase;
+    public Card requestAnswer;
 
     //References
     [SerializeField] private GameObject player;
     [SerializeField] private GameObject npc;
+    [SerializeField] private CardHand lake;
 
     private NPC Npc => npc.GetComponent<NPC>();
     private PlayerHand playerHand => player.GetComponent<PlayerHand>();
@@ -21,6 +23,7 @@ public class GameManager : MonoBehaviour
 
     public int npcPairs = 0;
     public int playerPairs = 0;
+    public bool wentFishing = false;
 
     void Awake()
     {
@@ -70,6 +73,19 @@ public class GameManager : MonoBehaviour
 
         //Update any managers
         CheatManager.instance.UpdateIsLying();
+    }
+
+    public void GoFish()
+    {
+        Card c = lake.RemoveRandomCard(false);
+        requestAnswer = c;
+        wentFishing = true;
+    }
+
+    public void GiveCard(Card card)
+    {
+        requestAnswer = card;
+        wentFishing = false;
     }
 
     public void EndTurn()
