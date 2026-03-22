@@ -62,7 +62,7 @@ public class CardObject : MonoBehaviour
             logoPos3.sprite = jackLogo;
         }
 
-        rank1.text = rank.ToString();
-        rank2.text = rank.ToString();
+        rank1.text = EnumExtensionMethods.abbreviateRank(rank);
+        rank2.text = EnumExtensionMethods.abbreviateRank(rank);
     }
 }
