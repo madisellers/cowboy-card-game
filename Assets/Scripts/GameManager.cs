@@ -1,6 +1,7 @@
 using System.Collections;
 using System.IO.Pipes;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -19,6 +20,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject npc;
     [SerializeField] private CardHand lake;
     [SerializeField] private GameObject npcShoots;
+    [SerializeField] private GameObject playerShoots;
+    [SerializeField] private GameObject gunSmoke;
+    [SerializeField] private GameObject loseScreen;
+    [SerializeField] private GameObject winScreen;
 
     private NPC Npc => npc.GetComponent<NPC>();
     private PlayerHand playerHand => player.GetComponent<PlayerHand>();
@@ -28,7 +33,7 @@ public class GameManager : MonoBehaviour
     public int playerPairs = 0;
     public bool wentFishing = false;
 
-    private bool started = false;
+    private bool phaseChanged = true;
 
     void Awake()
     {
@@ -49,10 +54,22 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (!started)
+        if (phaseChanged)
         {
-            started = true;
-            ChangeTurnPhase(TurnPhase.RequestCard);
+            phaseChanged = false;
+            HandleTurnPhaseChange();
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SceneManager.LoadScene(0);
+            return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+            return;
         }
     }
 
@@ -60,6 +77,15 @@ public class GameManager : MonoBehaviour
     {
         if (this.turnPhase == TurnPhase.PlacePair && turnPhase == TurnPhase.RequestCard) EndTurn();
 
+        this.turnPhase = turnPhase;
+        phaseChanged = true;
+
+        //Update any managers
+        CheatManager.instance.UpdateIsLying();
+    }
+
+    public void HandleTurnPhaseChange()
+    {
         if (playerTurn)
         {
             switch (turnPhase)
@@ -96,12 +122,6 @@ public class GameManager : MonoBehaviour
                     break;
             }
         }
-
-
-        this.turnPhase = turnPhase;
-
-        //Update any managers
-        CheatManager.instance.UpdateIsLying();
     }
 
     public void GoFish()
@@ -127,12 +147,23 @@ public class GameManager : MonoBehaviour
         cm.SetCurrentTurnStartInfo(turnNumber, playerTurn);
     }
 
-    public void GameOver(bool npcShot)
+    public void GameOver(bool npcShot, bool playerLead)
     {
         if (npcShot)
         {
             StartCoroutine(NPCShoots());
             return;
+        }
+
+        //Player shoots
+        //Check if valid shot
+        if ((playerLead && CheatManager.instance.canLeadShoot) || (!playerLead && CheatManager.instance.canOppositeShoot))
+        {
+            StartCoroutine(PlayerShootsCorrect());
+        }
+        else
+        {
+            StartCoroutine(PlayerShootsIncorrect());
         }
     }
 
@@ -154,8 +185,28 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(3f);
         npcShoots.SetActive(true);
+        yield return new WaitForSeconds(1f);
+        loseScreen.SetActive(true);
         yield return null;
     }
 
+    IEnumerator PlayerShootsCorrect()
+    {
+        playerShoots.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        winScreen.SetActive(true);
+        yield return null;
+    }
 
+    IEnumerator PlayerShootsIncorrect()
+    {
+        gunSmoke.SetActive(true);
+        yield return new WaitForSeconds(3f);
+        npcShoots.SetActive(true);
+        yield return new WaitForSeconds(1f);
+
+        loseScreen.SetActive(true);
+
+        yield return null;
+    }
 }

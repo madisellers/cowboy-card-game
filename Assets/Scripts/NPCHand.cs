@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Splines;
@@ -23,11 +24,17 @@ public class NPCHand : MonoBehaviour
         {
             AddCard(0);
         }
+        StopAllCoroutines();
+        Vector3 addedCardFinalPosition;
+        UpdateCardPositions(length, out addedCardFinalPosition);
     }
 
     public void AddCard(int index)
     {
         GameObject card = Instantiate(backCardPrefab);
+        Vector3 newPos = card.transform.position;
+        newPos.z = splineContainer.transform.parent.position.z;
+        card.transform.position = newPos;
         cardObjects.Insert(index, card);
         Vector3 addedCardFinalPosition;
         UpdateCardPositions(index, out addedCardFinalPosition);
@@ -36,14 +43,14 @@ public class NPCHand : MonoBehaviour
 
     public void RemoveCard(int index)
     {
-        GameObject go = cardObjects[index];
-        cardObjects.RemoveAt(index);
+        //GameObject go = cardObjects[index];
+        //cardObjects.RemoveAt(index);
         StartCoroutine(CardSlideUp(index, true));
     }
 
     private void UpdateCardPositions(int addedCardIndex, out Vector3 addedCardFinalPosition)
     {
-        float startZ = 0;
+        float startZ = splineContainer.transform.parent.position.z;
 
         float totalLength = splineContainer.CalculateLength(0);
         float spacing = totalLength / cardObjects.Count;
@@ -59,7 +66,7 @@ public class NPCHand : MonoBehaviour
             {
                 float position = (middlePos + spacing * multiplier) / totalLength;
                 Vector3 splinePosition = splineContainer.EvaluatePosition(position);
-                splinePosition.z = startZ - 0.01f * i;
+                splinePosition.z = startZ + 0.01f * i;
                 if (i == addedCardIndex) addedCardFinalPosition = splinePosition;
                 Vector3 forward = splineContainer.EvaluateTangent(position);
                 Vector3 up = splineContainer.EvaluateUpVector(position);
@@ -72,6 +79,8 @@ public class NPCHand : MonoBehaviour
                 multiplier++;
 
             }
+            addedCardFinalPosition = Vector3.zero;
+            return;
         }
         else
         {
@@ -94,11 +103,12 @@ public class NPCHand : MonoBehaviour
 
                 //Update values
                 multiplier++;
-
             }
+            addedCardFinalPosition = Vector3.zero;
+            return;
         }
 
-        addedCardFinalPosition = Vector3.zero;
+        
     }
 
     System.Collections.IEnumerator CardSlideDown(int index, Vector3 finalPosition)
@@ -122,7 +132,7 @@ public class NPCHand : MonoBehaviour
     System.Collections.IEnumerator CardSlideUp(int index, bool destroy)
     {
         float startY = cardObjects[index].transform.position.y;
-        float finalY = startY + 5f;
+        float finalY = startY + 2f;
         Vector3 finalPosition = cardObjects[index].transform.position;
         finalPosition.y = finalY;
         bool closeToFinal = startY > finalY;
@@ -143,6 +153,9 @@ public class NPCHand : MonoBehaviour
             UpdateCardPositions(-1, out addedCardFinalPosition);
             yield return null;
         }
-        cardObjects[index].transform.position = finalPosition;
+        else
+        {
+            cardObjects[index].transform.position = finalPosition;
+        }
     }
 }

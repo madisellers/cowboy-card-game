@@ -43,8 +43,8 @@ public class CardHand : MonoBehaviour
                 int index = Random.Range(0, fullDeck.Count);
                 Card c = fullDeck[index];
                 int cardIndex = (int)c.rank;
-                //If less than 2 of one kind of rank pulled, add it to the deck
-                if (ranks[cardIndex] < 2)
+                //If less than 1 of one kind of rank pulled, add it to the deck
+                if (ranks[cardIndex] < 1)
                 {
                 ranks[cardIndex]++;
                 deck.Add(Card.Copy(c));

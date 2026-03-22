@@ -30,6 +30,7 @@ public class PlayerHand : MonoBehaviour
 
     private (int card1, int card2) selected = (-1, -1);
     private bool pairCard1Picked = false;
+    private bool gunShot = false;
 
     private bool evenNumObj => cardObjects.Count % 2 == 0 ? true : false;
     private GameManager gm => GameManager.instance;
@@ -68,24 +69,24 @@ public class PlayerHand : MonoBehaviour
                 if (gm.playerTurn)
                 {
                     HandleGunActivation();
-                    bool shot = HandleGunControl();
-                    if (!playerGun.activeInHierarchy && !shot) RequestCard();
+                    HandleGunControl(true);
+                    if (!playerGun.activeInHierarchy && !gunShot) RequestCard();
                 }
                 break;
             case TurnPhase.AnswerRequest:
                 if (!gm.playerTurn)
                 {
                     HandleGunActivation();
-                    bool shot = HandleGunControl();
-                    if (!playerGun.activeInHierarchy && !shot) AnswerRequest();
+                    HandleGunControl(false);
+                    if (!playerGun.activeInHierarchy && !gunShot) AnswerRequest();
                 }
                 break;
             case TurnPhase.TakeCard:
                 if (gm.playerTurn)
                 {
                     HandleGunActivation();
-                    bool shot = HandleGunControl();
-                    if (!playerGun.activeInHierarchy && !shot) TakeCard();
+                    HandleGunControl(true);
+                    if (!playerGun.activeInHierarchy && !gunShot) TakeCard();
                 }
                 break;
             case TurnPhase.PlacePair:
@@ -166,6 +167,9 @@ public class PlayerHand : MonoBehaviour
             //skip if selected not set
             if (selected.card1 < 0) return;
 
+            //skip if card not match request
+            if (hand.deck[selected.card1].rank != GameManager.instance.request.rank) return;
+
             //Remove card from deck(s) and give to manager
             Card card = Card.Copy(hand.deck[selected.card1]);
             hand.deck.RemoveAt(selected.card1);
@@ -174,6 +178,7 @@ public class PlayerHand : MonoBehaviour
             CheatManager.instance.SetCurrentTurnCardGiven(true);
             CheatManager.instance.SetCurrentTurnRequestInOppositeHand(true);
             goFishButton.SetActive(false);
+            UpdateCardPositions();
             GameManager.instance.ChangeTurnPhase(TurnPhase.TakeCard);
         }
 
@@ -247,6 +252,7 @@ public class PlayerHand : MonoBehaviour
                 {
                     pairCard1Picked = false;
                     selected.card2 = -1;
+                    highlightCard2.SetActive(false);
                     return;
                 }
 
@@ -263,6 +269,16 @@ public class PlayerHand : MonoBehaviour
                 RemoveCard(second);
                 RemoveCard(first);
                 hand.RemovePair(hand.deck, card2, card1);
+
+                //Remove highlights
+                selected.card1 = -1;
+                highlightCard1.SetActive(false);
+                pairCard1Picked = false;
+                selected.card2 = -1;
+                highlightCard2.SetActive(false);
+
+                //Update card positions
+                UpdateCardPositions();
 
                 //Update managers
                 CheatManager.instance.SetCurrentTurnPairDroppedIndeces(first, second);
@@ -511,7 +527,7 @@ public class PlayerHand : MonoBehaviour
         CardObject co = hitCollider.gameObject.GetComponent<CardObject>();
         if (co == null) { selected.card1 = -1; highlightCard1.SetActive(false); return; }
         //If selectable card not found yet
-        if (selected.card1 < 0)
+        if (true)
         {
             //Find index of object it corresponds to adn save it
             int ind = FindCardObject(co.gameObject);
@@ -520,7 +536,6 @@ public class PlayerHand : MonoBehaviour
             //Place highlight
             highlightCard1.SetActive(true);
             Vector3 pos = co.transform.position;
-            pos.z -= 5f;
             highlightCard1.transform.position = pos;
         }
     }
@@ -534,7 +549,7 @@ public class PlayerHand : MonoBehaviour
         CardObject co = hitCollider.gameObject.GetComponent<CardObject>();
         if (co == null) { selected.card2 = -1; highlightCard2.SetActive(false); return; }
         //If selectable card not found yet
-        if (selected.card2 < 0)
+        if (true)
         {
             //Find index of object it corresponds to adn save it
             int ind = FindCardObject(co.gameObject);
@@ -544,7 +559,6 @@ public class PlayerHand : MonoBehaviour
             //Place highlight
             highlightCard2.SetActive(true);
             Vector3 pos = co.transform.position;
-            pos.z -= 5f;
             highlightCard2.transform.position = pos;
         }
     }
@@ -556,13 +570,19 @@ public class PlayerHand : MonoBehaviour
         Destroy(go);
     }
 
-    private bool HandleGunControl()
+    private bool HandleGunControl(bool playerLead)
     {
         if (!playerGun.activeInHierarchy) return false;
+        if (gunShot) return true;
+        Vector3 mousePos = MousePos();
+        Vector3 newPos = mousePos;
+        newPos.z = playerGun.transform.position.z;
+        playerGun.transform.position = newPos;
 
         if (Input.GetMouseButtonDown(0))
         {
-            GameManager.instance.GameOver(false);
+            GameManager.instance.GameOver(false, playerLead);
+            gunShot = true;
             return true;
         }
         return false;
@@ -570,6 +590,7 @@ public class PlayerHand : MonoBehaviour
 
     private void HandleGunActivation()
     {
+        if (gunShot) return;
         if (Input.GetMouseButtonDown(1))
         {
             playerGun.SetActive(true);

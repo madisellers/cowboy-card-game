@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.InputSystem.LowLevel.InputStateHistory;
 
 public class NPC : MonoBehaviour
 {
@@ -50,7 +51,7 @@ public class NPC : MonoBehaviour
         if ((lead && CheatManager.instance.canLeadShoot) || (!lead && CheatManager.instance.canOppositeShoot))
         {
             bool noticed = Random.value <= NOTICE_CHEAT_CHANCE;
-            if (noticed) GameManager.instance.GameOver(true);
+            if (noticed) GameManager.instance.GameOver(true, false);
             return noticed;
         }
         return false;
@@ -121,6 +122,8 @@ public class NPC : MonoBehaviour
         Card givenCard = Card.Copy(GameManager.instance.requestAnswer);
         hand.deck.Insert(i, givenCard);
         npcHand.AddCard(i);
+        Debug.Log($"Adding NPC index {i}");
+
         CheatManager.instance.SetCurrentTurnAddedCardIndex(i);
         GameManager.instance.ChangeTurnPhase(TurnPhase.PlacePair);
     }
@@ -140,9 +143,15 @@ public class NPC : MonoBehaviour
                 if (i == ind) continue;
                 if (hand.deck[i].rank == addedCard.rank)
                 {
-                    npcHand.RemoveCard(ind);
-                    npcHand.RemoveCard(i);
-                    hand.RemovePair(hand.deck, hand.deck[i], hand.deck[ind]);
+                    //Remove cards from deck(s)
+                    int first = i < ind ? i : ind;
+                    int second = first == i ? ind : i;
+                    Card card1 = Card.Copy(hand.deck[first]);
+                    Card card2 = Card.Copy(hand.deck[second]);
+                    npcHand.RemoveCard(second);
+                    npcHand.RemoveCard(first);
+                    Debug.Log($"Truthfully removing NPC indeces {second} and {first}");
+                    hand.RemovePair(hand.deck, hand.deck[ind], hand.deck[i]);
                     CheatManager.instance.SetCurrentTurnPairDroppedIndeces(i, ind);
                     havePair = true;
                     break;
@@ -171,6 +180,8 @@ public class NPC : MonoBehaviour
                 int ind = hand.FindRank(hand.deck, hand.deck[i].rank);
                 npcHand.RemoveCard(ind);
                 npcHand.RemoveCard(i);
+                Debug.Log($"Trying to lie, removing NPC indeces {ind} and {i}");
+
                 hand.RemovePair(hand.deck, hand.deck[i], hand.deck[ind]);
                 CheatManager.instance.SetCurrentTurnPairDroppedIndeces(i, ind);
                 havePair = true;
