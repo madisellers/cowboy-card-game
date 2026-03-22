@@ -12,7 +12,6 @@ public class NPCHand : MonoBehaviour
     [Header("References")]
     [SerializeField] private GameObject backCardPrefab;
     [SerializeField] private SplineContainer splineContainer;
-    [SerializeField] private Camera mainCamera;
 
     public int ghostCardIndex = -1;
 
