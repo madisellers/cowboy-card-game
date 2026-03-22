@@ -1,3 +1,5 @@
+using UnityEngine.Rendering.Universal.Internal;
+
 public enum CardSuit
 {
     NULL,
@@ -46,6 +48,12 @@ public struct Card
         this.suit = suit;
         this.rank = rank;
         this.fromCheatDeck = fromCheatDeck;
+    }
+
+    public static Card Copy(Card card)
+    {
+        Card c = new Card(card.suit, card.rank, card.fromCheatDeck);
+        return c;
     }
 
     public string ToString()

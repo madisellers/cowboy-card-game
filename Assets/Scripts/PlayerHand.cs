@@ -33,6 +33,23 @@ public class PlayerHand : MonoBehaviour
         }
     }
 
+    private void HandleControl()
+    {
+        switch (GameManager.instance.turnPhase)
+        {
+            case TurnPhase.RequestCard:
+                break;
+            case TurnPhase.AnswerRequest:
+                break;
+            case TurnPhase.TakeCard:
+                break;
+            case TurnPhase.PlacePair:
+                break;
+            default:
+                break;
+        }
+    }
+
     private void DrawCard()
     {
         GameObject card = Instantiate(cardPrefab);

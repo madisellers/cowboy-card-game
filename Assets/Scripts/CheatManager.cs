@@ -147,7 +147,7 @@ public class CheatManager : MonoBehaviour
 
     //Useful lambdas
     private Turn PrevTurn => turnHistory.First.Value;                       //Get the previous turn
-    //private Turn LastLeadMatchTurn => PrevTurn.Next.Value;                  //Get the first turn whose lead matches the current turn's lead (aka previous previous turn)
+    private Turn LastLeadMatchTurn => turnHistory.First.Next.Value;         //Get the first turn whose lead matches the current turn's lead (aka previous previous turn)
 
     //Fun end game cheat stats
     private int opponentAddedCheatCardsCount = 0;
@@ -160,6 +160,7 @@ public class CheatManager : MonoBehaviour
         //Create static instance here
         if (instance == null) instance = this;
         else Destroy(gameObject);
+        currentTurn = new();
     }
 
     public void AddTurnToHistory()
@@ -176,6 +177,8 @@ public class CheatManager : MonoBehaviour
         {
             turnHistory.RemoveLast();
         }
+
+        currentTurn = new();
 
     }
 
@@ -208,7 +211,7 @@ public class CheatManager : MonoBehaviour
         if (currentPhase != TurnPhase.TakeCard) return;
 
         //Current phase is TakeCard (the opposite might have lied in previous phase)
-        Turn firstDenial = new Turn();// = LastLeadMatchTurn;
+        Turn firstDenial = LastLeadMatchTurn;
 
         //If card given, no lie possible
         if (firstDenial.cardGiven) return;
@@ -286,6 +289,12 @@ public class CheatManager : MonoBehaviour
     }
 
     //-------------------Update currentTurnInfo-----------------------------------
+    public void SetCurrentTurnStartInfo(int number, bool isPlayerTurn)
+    {
+        currentTurn.number = number;
+        currentTurn.playerIsLead = isPlayerTurn;
+    }
+    
     public void SetCurrentTurnRequestRank(CardRank rank)
     {
         currentTurn.requestRank = rank;
@@ -304,6 +313,11 @@ public class CheatManager : MonoBehaviour
     public void SetCurrentTurnAddedCardIndex(int i)
     {
         currentTurn.addedCardIndex = i;
+    }
+
+    public void SetCurrentTurnPairDroppedIndeces(int i, int j)
+    {
+        currentTurn.pairDropped = (i, j);
     }
 
     //---------------------Debug methods (DO NOT USE FOR GAME PURPOSES-------------------------------
