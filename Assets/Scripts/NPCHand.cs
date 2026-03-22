@@ -7,7 +7,7 @@ public class NPCHand : MonoBehaviour
     private const float MAX_HAND_ANGLE_DEG = 90;
     private const float MAX_CARD_SPACING = 1f;
 
-    public List<GameObject> cardObjects;
+    public List<GameObject> cardObjects = new();
 
     [Header("References")]
     [SerializeField] private GameObject backCardPrefab;
@@ -16,6 +16,14 @@ public class NPCHand : MonoBehaviour
     public int ghostCardIndex = -1;
 
     private bool evenNumObj => cardObjects.Count % 2 == 0 ? true : false;
+
+    public void StartUp(int length)
+    {
+        for (int i = 0; i < length; i++)
+        {
+            AddCard(0);
+        }
+    }
 
     public void AddCard(int index)
     {
@@ -99,13 +107,13 @@ public class NPCHand : MonoBehaviour
         newStartPos.y += 3f;
         cardObjects[index].transform.position = newStartPos;
         bool closeToFinal = newStartPos.y < finalPosition.y;
-        float MOVE_SPEED = 5f;
+        float MOVE_SPEED = 1f;
         while (!closeToFinal)
         {
             Vector3 newPos = cardObjects[index].transform.position;
             newPos.y -= MOVE_SPEED * Time.deltaTime;
             cardObjects[index].transform.position = newPos;
-            closeToFinal = newStartPos.y < finalPosition.y;
+            closeToFinal = newPos.y < finalPosition.y;
             yield return null;
         }
         cardObjects[index].transform.position = finalPosition;
@@ -118,7 +126,7 @@ public class NPCHand : MonoBehaviour
         Vector3 finalPosition = cardObjects[index].transform.position;
         finalPosition.y = finalY;
         bool closeToFinal = startY > finalY;
-        float MOVE_SPEED = 5f;
+        float MOVE_SPEED = 1f;
         while (!closeToFinal)
         {
             Vector3 newPos = cardObjects[index].transform.position;

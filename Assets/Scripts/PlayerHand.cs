@@ -9,12 +9,14 @@ public class PlayerHand : MonoBehaviour
     private const float MAX_HAND_ANGLE_DEG = 90;
     private const float MAX_CARD_SPACING = 1f;
 
-    public List<GameObject> cardObjects;
+    public List<GameObject> cardObjects = new();
 
     [Header("References")]
     [SerializeField] private GameObject goFishButton;
+    [SerializeField] private GameObject playerGun;
     [SerializeField] private SplineContainer splineContainer;
     [SerializeField] private Camera mainCamera;
+
 
     [Header("References - Assets")]
     [SerializeField] private GameObject cardPrefab;
@@ -32,6 +34,16 @@ public class PlayerHand : MonoBehaviour
     private bool evenNumObj => cardObjects.Count % 2 == 0 ? true : false;
     private GameManager gm => GameManager.instance;
     private CardHand hand => GetComponent<CardHand>();
+
+    private void Start()
+    {
+        hand.Startup(false);
+        for (int i = 0; i < hand.deck.Count; i++)
+        {
+            Card c = hand.deck[i];
+            AddCard(c.rank, c.suit, i);
+        }
+    }
 
     private void Update()
     {
@@ -55,19 +67,25 @@ public class PlayerHand : MonoBehaviour
             case TurnPhase.RequestCard:
                 if (gm.playerTurn)
                 {
-                    RequestCard();
+                    HandleGunActivation();
+                    bool shot = HandleGunControl();
+                    if (!playerGun.activeInHierarchy && !shot) RequestCard();
                 }
                 break;
             case TurnPhase.AnswerRequest:
                 if (!gm.playerTurn)
                 {
-                    AnswerRequest();
+                    HandleGunActivation();
+                    bool shot = HandleGunControl();
+                    if (!playerGun.activeInHierarchy && !shot) AnswerRequest();
                 }
                 break;
             case TurnPhase.TakeCard:
                 if (gm.playerTurn)
                 {
-                    TakeCard();
+                    HandleGunActivation();
+                    bool shot = HandleGunControl();
+                    if (!playerGun.activeInHierarchy && !shot) TakeCard();
                 }
                 break;
             case TurnPhase.PlacePair:
@@ -536,6 +554,30 @@ public class PlayerHand : MonoBehaviour
         GameObject go = cardObjects[i];
         cardObjects.RemoveAt(i);
         Destroy(go);
+    }
+
+    private bool HandleGunControl()
+    {
+        if (!playerGun.activeInHierarchy) return false;
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            GameManager.instance.GameOver(false);
+            return true;
+        }
+        return false;
+    }
+
+    private void HandleGunActivation()
+    {
+        if (Input.GetMouseButtonDown(1))
+        {
+            playerGun.SetActive(true);
+        }
+        if (Input.GetMouseButtonUp(1))
+        {
+            playerGun.SetActive(false);
+        }
     }
 
 }

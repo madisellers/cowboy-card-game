@@ -34,6 +34,7 @@ public enum CheatType
     WithheldWhenAsked
 }
 
+[System.Serializable]
 public struct Card
 {
     public CardSuit suit;           //This cards suit

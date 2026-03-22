@@ -1,3 +1,4 @@
+using System.Collections;
 using System.IO.Pipes;
 using UnityEngine;
 
@@ -17,6 +18,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject player;
     [SerializeField] private GameObject npc;
     [SerializeField] private CardHand lake;
+    [SerializeField] private GameObject npcShoots;
 
     private NPC Npc => npc.GetComponent<NPC>();
     private PlayerHand playerHand => player.GetComponent<PlayerHand>();
@@ -26,11 +28,15 @@ public class GameManager : MonoBehaviour
     public int playerPairs = 0;
     public bool wentFishing = false;
 
+    private bool started = false;
+
     void Awake()
     {
         //Create instance
         if (instance == null) instance = this;
         else Destroy(gameObject);
+
+        lake.Startup(true);
 
     }
 
@@ -39,6 +45,15 @@ public class GameManager : MonoBehaviour
         turnNumber = 1;
         playerTurn = false;
         SwitchLeadOppositeStates();
+    }
+
+    private void Update()
+    {
+        if (!started)
+        {
+            started = true;
+            ChangeTurnPhase(TurnPhase.RequestCard);
+        }
     }
 
     public void ChangeTurnPhase(TurnPhase turnPhase)
@@ -112,6 +127,15 @@ public class GameManager : MonoBehaviour
         cm.SetCurrentTurnStartInfo(turnNumber, playerTurn);
     }
 
+    public void GameOver(bool npcShot)
+    {
+        if (npcShot)
+        {
+            StartCoroutine(NPCShoots());
+            return;
+        }
+    }
+
     private void SwitchLeadOppositeStates()
     {
         if (playerTurn)
@@ -125,4 +149,13 @@ public class GameManager : MonoBehaviour
             oppositeState = player.GetComponent<CowboyState>();
         }
     }
+
+    IEnumerator NPCShoots()
+    {
+        yield return new WaitForSeconds(3f);
+        npcShoots.SetActive(true);
+        yield return null;
+    }
+
+
 }

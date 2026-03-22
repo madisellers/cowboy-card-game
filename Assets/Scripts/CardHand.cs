@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR;
 
 public class CardHand : MonoBehaviour
 {
@@ -10,15 +11,10 @@ public class CardHand : MonoBehaviour
     private const int NORMAL_RANK_LIMIT = 8;
 
     [SerializeField] public bool hasCheatDeck = false;
-    [SerializeField] public List<Card> deck = null;
-    [SerializeField] public List<Card> cheatDeck = null;
+    [SerializeField] public List<Card> deck = new();
+    [SerializeField] public List<Card> cheatDeck = new();
 
-    void Awake()
-    {
-        Startup();
-    }
-
-    public void Startup()
+    public void Startup(bool lake)
     {
         //switch (GameManager.instance.difficulty)
         //{
@@ -36,8 +32,28 @@ public class CardHand : MonoBehaviour
         //        break;
         //}
 
-        deck = BuildDeck(false);
-        if (hasCheatDeck) cheatDeck = BuildDeck(true);
+        if (lake) { deck = BuildDeck(false); return; }
+        //Make full deck to draw from
+        int[] ranks = new int[14];
+        List<Card> fullDeck = new List<Card>();
+        fullDeck = BuildDeck(false);
+
+        while (deck.Count < 7)
+        {
+                int index = Random.Range(0, fullDeck.Count);
+                Card c = fullDeck[index];
+                int cardIndex = (int)c.rank;
+                //If less than 2 of one kind of rank pulled, add it to the deck
+                if (ranks[cardIndex] < 2)
+                {
+                ranks[cardIndex]++;
+                deck.Add(Card.Copy(c));
+                }
+                fullDeck.RemoveAt(index);
+        }
+
+        
+        //if (hasCheatDeck) cheatDeck = BuildDeck(true);
     }
 
     public void AddCard(Card card, int i)

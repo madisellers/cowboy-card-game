@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class NPC : MonoBehaviour
 {
+    private const float NOTICE_CHEAT_CHANCE = 0.2f;
+
     [Header("References - Behaviour")]
     [SerializeField] private CardHand hand;
     [SerializeField] private NPCHand npcHand;
@@ -14,24 +16,45 @@ public class NPC : MonoBehaviour
 
     private CowboyState state => GetComponent<CowboyState>();
 
+    private void Start()
+    {
+        hand.Startup(false);
+        npcHand.StartUp(hand.deck.Count);
+    }
+
     public void RequestCard()
     {
+        if (NoticeCheat(true)) { return; }
         StartCoroutine(IERequestCard());
     }
 
     public void AnswerRequest(CardRank rank)
     {
+        if (NoticeCheat(false)) { return; }
         StartCoroutine(IEAnswerRequest(rank));
     }
 
     public void TakeCard()
     {
-        StartCoroutine (IETakeCard());
+        if (NoticeCheat(true)) { return; }
+        StartCoroutine(IETakeCard());
     }
 
     public void PlacePair()
     {
         StartCoroutine(IEPlacePair());
+    }
+
+    private bool NoticeCheat(bool lead)
+    {
+        if ((lead && CheatManager.instance.canLeadShoot) || (!lead && CheatManager.instance.canOppositeShoot))
+        {
+            bool noticed = Random.value <= NOTICE_CHEAT_CHANCE;
+            if (noticed) GameManager.instance.GameOver(true);
+            return noticed;
+        }
+        return false;
+        
     }
 
     private void DisplayCardRequest(Card card)
