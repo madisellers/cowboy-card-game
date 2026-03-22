@@ -11,11 +11,13 @@ And if he decides to cheat, well. That's what your trusty revolver is for.
 
 ## Instructions
 
-The goal of the game is to place matching sets of cards. 
+The goal of the game is to place matching pairs of cards. 
 
 On your turn, you will ask your opponent for one of the cards in your hand. If they have one of those cards, they have to give it to you (or cheat. We'll get to that later.). In this situation, you get to ask again for another card.
 
 When you ask for a card that they don't have ('Go fish'), you draw a random card, and your turn ends.
+
+When you have 2 of a particular card, you can click that pair to cash it in.
 
 ## Cheating
 
