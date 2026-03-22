@@ -17,6 +17,8 @@ public class CardObject : MonoBehaviour
     [SerializeField] private Sprite queenLogo;
     [SerializeField] private Sprite jackLogo;
 
+    public bool selected = false;
+
     public void SetUp(CardRank rank, CardSuit suit)
     {
         switch (suit)

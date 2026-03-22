@@ -6,6 +6,7 @@ public class NPC : MonoBehaviour
 {
     [Header("References - Behaviour")]
     [SerializeField] private CardHand hand;
+    [SerializeField] private NPCHand npcHand;
 
     [Header("References - Assets")]
     [SerializeField] private GameObject requestBubble;
@@ -104,6 +105,7 @@ public class NPC : MonoBehaviour
         int i = Random.Range(0, hand.deck.Count);
         Card givenCard = GameManager.instance.requestAnswer;
         hand.deck.Insert(i, givenCard);
+        npcHand.AddCard(i);
         CheatManager.instance.SetCurrentTurnAddedCardIndex(i);
         GameManager.instance.ChangeTurnPhase(TurnPhase.PlacePair);
     }
@@ -123,6 +125,8 @@ public class NPC : MonoBehaviour
                 if (i == ind) continue;
                 if (hand.deck[i].rank == addedCard.rank)
                 {
+                    npcHand.RemoveCard(ind);
+                    npcHand.RemoveCard(i);
                     hand.RemovePair(hand.deck, hand.deck[i], hand.deck[ind]);
                     CheatManager.instance.SetCurrentTurnPairDroppedIndeces(i, ind);
                     havePair = true;
@@ -150,6 +154,8 @@ public class NPC : MonoBehaviour
             if (ranks[cardIndex] == 2)
             {
                 int ind = hand.FindRank(hand.deck, hand.deck[i].rank);
+                npcHand.RemoveCard(ind);
+                npcHand.RemoveCard(i);
                 hand.RemovePair(hand.deck, hand.deck[i], hand.deck[ind]);
                 CheatManager.instance.SetCurrentTurnPairDroppedIndeces(i, ind);
                 havePair = true;
