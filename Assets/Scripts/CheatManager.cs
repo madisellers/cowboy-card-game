@@ -138,7 +138,7 @@ public class CheatManager : MonoBehaviour
 
     //Attributes
     private Turn currentTurn;
-    private LinkedList<Turn> turnHistory;                                   //Keeps a running record of the turns information, where the first node is the latest and the last node is the oldest
+    private LinkedList<Turn> turnHistory = new();                                   //Keeps a running record of the turns information, where the first node is the latest and the last node is the oldest
     private bool oppositeIsLying;
     private bool oppositeIsCheating;
     private bool leadIsLying;
@@ -245,6 +245,7 @@ public class CheatManager : MonoBehaviour
         //Scenario A
         if (currentPhase == TurnPhase.AnswerRequest)
         {
+            if (turnHistory.Count < 1) return;
             //If opposite lied last turn and request rank is same as last turn
             if (PrevTurn.oppositeLied && currentTurn.requestRank == PrevTurn.requestRank)
             {
