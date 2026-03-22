@@ -6,13 +6,13 @@ public class CheatManager : MonoBehaviour
     /*
  * RULES OF GAME RELEVANT TO CHEATING POTENTIALS
  * ------------------------------------------------
- * - If a cowboy obtains a pair by being given a card, he must place some combo of pair on the table, regardless of either cards cheat status.
- * 		-Of course, if this given card is placed in index and pair chosen from different indeces, this results in lying
- * - If a cowboy obtains a pair by going fishing, he must place it on the table UNLESS on of the pair cards was draw via cheating.
+ * - If a cowboy obtains a pair by being given a card, he must place some combo of pair on the table, regardless of either card's cheat status.
+ * 		- Of course, if this given card is placed in index and pair chosen from different indeces, this results in lying
+ * - If a cowboy obtains a pair by going fishing, he must place it on the table UNLESS one of the pair cards was drawn via cheating.
  * - If a cowboy has a cheat pair not yet placed, and obtains the same rank in the pair via going fishing, he MUST place this new valid pair on the table
  * 		- A cheat pair can only be placed after a Go Fish, if no valid pair is present
  * - Cowboys can only request a rank that is already in their hand
- * - Pairs placed on table are still kept secret until game over.
+ * - Pairs placed on the table are kept secret until game over.
  * - When first handed cards at start of game, there will NEVER be initial pairs. All cards will have unique ranks for both cowboys in initial draw.
  * 
  * WHEN DOES CHEATING COUNT AS CHEATING
@@ -37,10 +37,9 @@ public class CheatManager : MonoBehaviour
  * C) First cowboy asks for 2s. Second cowboy says no (lie). First cowboy goes fishing. Second cowboy adds cheated 2 card successfully. Second cowboy asks for 4s. 
  *   First cowboy says no (either). Second cowboy goes fishing. Second cowboy places it in index 5. Takes pair cards from index 2 and 4. First CAN shoot.
  * D) First cowboy asks for 2s. Second says no (lie). First cowboy goes fishing. Second cowboy adds cheated 2 card successfully. Second cowboy asks for 4s. 
- *   First says says no (either). Second goes fishing, places it in index 5. Takes pair cards from index 5 and 4. First CANNOT shoot. Still could be legit pair, not guarunteed cheating.
- * 
+ *   First says says no (either). Second goes fishing, places it in index 5. Takes pair cards from index 5 and 4. First CANNOT shoot. Still could be legit pair, not guaranteed cheating.
  * E) First cowboy asks for 2s, Second says no (truth). First goes fishing. Second asks for 4s. First gives a 4. Second makes pair with it and drops it. First asks for 2s. 
- *  Second sucessfully adds a cheat 2. Second says yes. First CAN shoot. Since Second didn't go fish and card given didn't match the card given, the only way they could have 
+ *  Second successfully adds a cheat 2. Second says yes. First CAN shoot. Since Second didn't go fish and card given didn't match the card given, the only way they could have 
  *  gotten a 2 was to add it from cheat pile
  * F) First cowboy asks for 2s, Second says no (lie). First goes fishing. Second asks for 4s. First gives a 4. Second makes pair with it and drops it. First asks for 2s. 
  *  Second says yes. First CAN shoot. Since Second didn't go fish and card given didn't match previous, the only way they could have had a 2 was if they lied about having it 2 turns ago.
@@ -51,7 +50,7 @@ public class CheatManager : MonoBehaviour
  * 		-L: No
  * 		-O: Yes (Scenario B, C)
  * AnswerRequest
- *		-L: Yes (scneario A)
+ *		-L: Yes (Scenario A)
  *		-O: No
  * TakeCard:
  *		-L: No
@@ -156,8 +155,8 @@ public class CheatManager : MonoBehaviour
     private int playerLiedInAnswerCount = 0;
 
     void Awake()
-    {
-        //Create static instance here
+    {    
+        //Create static instance here    
         if (instance == null) instance = this;
         else Destroy(gameObject);
         currentTurn = new();
@@ -188,14 +187,14 @@ public class CheatManager : MonoBehaviour
         UpdateLeadIsLying();
     }
 
-    //Tircky becaus eneed to keep track of whole segment + opposite/lead flips
+    //Tricky because we need to keep track of whole segment + opposite/lead flips
     //Called at very beginning of every turn phase change
     private void UpdateOppositeIsLying()
     {
         //Scenario B, C
         if (currentPhase == TurnPhase.RequestCard)
         {
-            //If opposite (who was lead last turn) dropped a pair in which niether were from the added index
+            //If opposite (who was lead last turn) dropped a pair in which neither were from the added index
             if (!PrevTurn.addedCardInPairDropped)
             {
                 oppositeIsLying = true;
@@ -204,7 +203,7 @@ public class CheatManager : MonoBehaviour
         }
 
         //Scenario E, F
-        //CHeck more than 1 turn occured
+        //Check more than 1 turn occurred
         if (turnHistory.Count < 2) return;
 
         //The only phase the opposite can lie in is the AnswerRequest, so only have to update after that
@@ -237,7 +236,7 @@ public class CheatManager : MonoBehaviour
         oppositeIsLying = false;
     }
 
-    //Tircky becaus eneed to keep track of whole segment + opposite/lead flips
+    //Tricky because we need to keep track of whole segment + opposite/lead flips
     //Called at very beginning of every turn phase change
     private void UpdateLeadIsLying()
     {
@@ -260,7 +259,7 @@ public class CheatManager : MonoBehaviour
 
     //When called when bringing gun up, call this first before updating anything else!
     //Then when called when putting gun down, call this last
-    //In case of NPC AI, figure out when to call. NEED TO CALL EVERYTIMe, INCLUDING TO RESET AS NOT CHEATING
+    //In case of NPC AI, figure out when to call. NEED TO CALL EVERY TIME, INCLUDING TO RESET AS NOT CHEATING
     private void UpdateOppositeIsCheating()
     {
         //if (leadState.canSeeOpponent && oppositeState.isCheating)
@@ -275,7 +274,7 @@ public class CheatManager : MonoBehaviour
 
     //When called when bringing gun up, call this first before updating anything else!
     //Then when called when putting gun down, call this last
-    //In case of NPC AI, figure out when to call. NEED TO CALL EVERYTIMe, INCLUDING TO RESET AS NOT CHEATING
+    //In case of NPC AI, figure out when to call. NEED TO CALL EVERY TIME, INCLUDING TO RESET AS NOT CHEATING
     private void UpdateLeadIsCheating()
     {
         //if (oppositeState.canSeeOpponent && leadState.isCheating)
