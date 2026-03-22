@@ -27,6 +27,7 @@ public class PlayerHand : MonoBehaviour
     public int ghostCardIndex = -1;
 
     private (int card1, int card2) selected = (-1, -1);
+    private bool pairCard1Picked = false;
 
     private bool evenNumObj => cardObjects.Count % 2 == 0 ? true : false;
     private GameManager gm => GameManager.instance;
@@ -70,6 +71,10 @@ public class PlayerHand : MonoBehaviour
                 }
                 break;
             case TurnPhase.PlacePair:
+                if (gm.playerTurn)
+                {
+                    PlacePair();
+                }
                 break;
             default:
                 break;
@@ -177,6 +182,102 @@ public class PlayerHand : MonoBehaviour
         CheatManager.instance.SetCurrentTurnAddedCardIndex(i);
         GameManager.instance.ChangeTurnPhase(TurnPhase.PlacePair);
 
+    }
+
+    private void PlacePair()
+    {
+        //Check if there is a valid pair
+        bool havePair = false;
+        int[] ranks = new int[14];
+        for (int i = 0; i < hand.deck.Count; i++)
+        {
+            int cardIndex = (int)hand.deck[i].rank;
+            ranks[cardIndex]++;
+            if (ranks[cardIndex] == 2)
+            {
+                havePair = true;
+            }
+        }
+        //No pair in hand
+        if (!havePair)
+        {
+            CheatManager.instance.SetCurrentTurnPairDroppedIndeces(-1, -1);
+            GameManager.instance.ChangeTurnPhase(TurnPhase.RequestCard);
+        }
+
+        //If card 1 already selected
+        if (selected.card1 >= 0 && pairCard1Picked)
+        {
+            HighlightCard2();
+
+            //If no button click, skip
+            if (!Input.GetMouseButtonDown(0)) return;
+
+            Vector3 mousePos = MousePos();
+            Collider2D hitCollider = Physics2D.OverlapPoint(mousePos);
+            //Nothing found
+            if (hitCollider == null) return;
+            //Card clicked
+            CardObject co = hitCollider.gameObject.GetComponent<CardObject>();
+            if (co != null)
+            {
+                //skip if selected not set
+                if (selected.card1 < 0) return;
+
+                //If highlight card 1 clicked, undo pair
+                if (selected.card2 == selected.card1)
+                {
+                    pairCard1Picked = false;
+                    selected.card2 = -1;
+                    return;
+                }
+
+                //if second card clicked does not match in rank, skip
+                CardRank r1 = hand.deck[selected.card1].rank;
+                CardRank r2 = hand.deck[selected.card2].rank;
+                if (r1 != r2) return;
+
+                //Remove cards from deck(s)
+                int first = selected.card1 < selected.card2 ? selected.card1 : selected.card2;
+                int second = first == selected.card1 ? selected.card2 : selected.card2;
+                Card card1 = Card.Copy(hand.deck[first]);
+                Card card2 = Card.Copy(hand.deck[second]);
+                RemoveCard(second);
+                RemoveCard(first);
+                hand.RemovePair(hand.deck, card2, card1);
+
+                //Update managers
+                CheatManager.instance.SetCurrentTurnPairDroppedIndeces(first, second);
+                gm.playerPairs++;
+                gm.ChangeTurnPhase(TurnPhase.RequestCard);
+            }
+
+        }
+        //Card 1 needs to be selected
+        else
+        {
+            //Select Card 1
+            HighlightCard1();
+            //If no button click, skip
+            if (!Input.GetMouseButtonDown(0)) return;
+
+
+            Vector3 mousePos = MousePos();
+            Collider2D hitCollider = Physics2D.OverlapPoint(mousePos);
+            //Nothing found
+            if (hitCollider == null) return;
+
+            //Card clicked
+            CardObject co = hitCollider.gameObject.GetComponent<CardObject>();
+            if (co != null)
+            {
+                //skip if selected not set
+                if (selected.card1 < 0) return;
+
+                //Mark pair card 1 as being picked
+                pairCard1Picked = true;
+            }
+        }
     }
 
     private void DrawCard()
@@ -403,6 +504,30 @@ public class PlayerHand : MonoBehaviour
             Vector3 pos = co.transform.position;
             pos.z -= 5f;
             highlightCard1.transform.position = pos;
+        }
+    }
+
+    //Updates selectable card 1 and places a highlight over it
+    private void HighlightCard2()
+    {
+        Vector3 mousePos = MousePos();
+        Collider2D hitCollider = Physics2D.OverlapPoint(mousePos);
+        if (hitCollider == null) { selected.card2 = -1; highlightCard2.SetActive(false); return; }
+        CardObject co = hitCollider.gameObject.GetComponent<CardObject>();
+        if (co == null) { selected.card2 = -1; highlightCard2.SetActive(false); return; }
+        //If selectable card not found yet
+        if (selected.card2 < 0)
+        {
+            //Find index of object it corresponds to adn save it
+            int ind = FindCardObject(co.gameObject);
+            if (ind == -1) return;
+            if (ind == selected.card1) { selected.card2 = ind; highlightCard2.SetActive(false); return; }
+            selected.card2 = ind;
+            //Place highlight
+            highlightCard2.SetActive(true);
+            Vector3 pos = co.transform.position;
+            pos.z -= 5f;
+            highlightCard2.transform.position = pos;
         }
     }
 
