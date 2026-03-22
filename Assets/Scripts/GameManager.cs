@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     public CowboyState leadState;
     public CowboyState oppositeState;
     public TurnPhase turnPhase;
+    public Card request;
     public Card requestAnswer;
 
     //References
@@ -46,7 +47,20 @@ public class GameManager : MonoBehaviour
 
         if (playerTurn)
         {
-
+            switch (turnPhase)
+            {
+                case TurnPhase.RequestCard:
+                    break;
+                case TurnPhase.AnswerRequest:
+                    Npc.AnswerRequest(request.rank);
+                    break;
+                case TurnPhase.TakeCard:
+                    break;
+                case TurnPhase.PlacePair:
+                    break;
+                default:
+                    break;
+            }
         }
         else
         {

@@ -40,20 +40,11 @@ public class NPC : MonoBehaviour
         requestBubble.GetComponent<RequestBubble>().SetRank(card.rank);
     }
 
-    private void HideCardRequest()
-    {
-        requestBubble.SetActive(false);
-    }
-
     private void DisplayGoFish()
     {
         goFishBubble.SetActive(true);
     }
 
-    private void HideGoFish()
-    {
-        goFishBubble.SetActive(false);
-    }
     IEnumerator IEAnswerRequest(CardRank rank)
     {
         yield return new WaitForSeconds(3);
@@ -93,7 +84,8 @@ public class NPC : MonoBehaviour
     {
         yield return new WaitForSeconds(3);
         int i = Random.Range(0, hand.deck.Count);
-        Card card = hand.deck[i];
+        Card card = Card.Copy(hand.deck[i]);
+        GameManager.instance.request = card;
         CheatManager.instance.SetCurrentTurnRequestRank(card.rank);
         DisplayCardRequest(card);
         GameManager.instance.ChangeTurnPhase(TurnPhase.AnswerRequest);
@@ -103,7 +95,7 @@ public class NPC : MonoBehaviour
     {
         yield return new WaitForSeconds(3);
         int i = Random.Range(0, hand.deck.Count);
-        Card givenCard = GameManager.instance.requestAnswer;
+        Card givenCard = Card.Copy(GameManager.instance.requestAnswer);
         hand.deck.Insert(i, givenCard);
         npcHand.AddCard(i);
         CheatManager.instance.SetCurrentTurnAddedCardIndex(i);

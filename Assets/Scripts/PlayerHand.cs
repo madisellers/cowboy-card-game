@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Splines;
 using UnityEngine.U2D;
+using UnityEngine.XR;
 
 public class PlayerHand : MonoBehaviour
 {
@@ -11,43 +12,171 @@ public class PlayerHand : MonoBehaviour
     public List<GameObject> cardObjects;
 
     [Header("References")]
-    [SerializeField] private GameObject cardPrefab;
-    [SerializeField] private GameObject ghostCardPrefab;
+    [SerializeField] private GameObject goFishButton;
     [SerializeField] private SplineContainer splineContainer;
     [SerializeField] private Camera mainCamera;
 
+    [Header("References - Assets")]
+    [SerializeField] private GameObject cardPrefab;
+    [SerializeField] private GameObject ghostCardPrefab;
+    [SerializeField] private GameObject highlightCard1;
+    [SerializeField] private GameObject highlightCard2;
+    [SerializeField] private GameObject requestBubble;
+    [SerializeField] private GameObject goFishBubble;
+
     public int ghostCardIndex = -1;
 
+    private (int card1, int card2) selected = (-1, -1);
+
     private bool evenNumObj => cardObjects.Count % 2 == 0 ? true : false;
+    private GameManager gm => GameManager.instance;
+    private CardHand hand => GetComponent<CardHand>();
 
     private void Update()
     {
-        CheckGhostCardPlacement();
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            AddCard(CardRank.King, CardSuit.Spades, ghostCardIndex);
-        }
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            DrawCard();
-        }
+        //CheckGhostCardPlacement();
+        //if (Input.GetKeyDown(KeyCode.Space))
+        //{
+        //    AddCard(CardRank.King, CardSuit.Spades, ghostCardIndex);
+        //}
+        //if (Input.GetKeyDown(KeyCode.S))
+        //{
+        //    DrawCard();
+        //}
+
+        HandleControl();
     }
 
     private void HandleControl()
     {
-        switch (GameManager.instance.turnPhase)
+        switch (gm.turnPhase)
         {
             case TurnPhase.RequestCard:
+                if (gm.playerTurn)
+                {
+                    RequestCard();
+                }
                 break;
             case TurnPhase.AnswerRequest:
+                if (!gm.playerTurn)
+                {
+                    AnswerRequest();
+                }
                 break;
             case TurnPhase.TakeCard:
+                if (gm.playerTurn)
+                {
+                    TakeCard();
+                }
                 break;
             case TurnPhase.PlacePair:
                 break;
             default:
                 break;
         }
+    }
+
+    private void RequestCard()
+    {
+        HighlightCard1();
+
+        //If mouse clicked
+        if (Input.GetMouseButtonDown(0))
+        {
+            //No card selected skip
+            if (selected.card1 < 0) return;
+            //Request selected card
+            Card card = Card.Copy(hand.deck[selected.card1]);
+            GameManager.instance.request = card;
+            CheatManager.instance.SetCurrentTurnRequestRank(card.rank);
+            DisplayCardRequest(card);
+            selected.card1 = -1;
+            GameManager.instance.ChangeTurnPhase(TurnPhase.AnswerRequest);
+        }
+    }
+
+    private void AnswerRequest()
+    {
+        goFishButton.SetActive(true);
+        HighlightCard1();
+        //If no button click, skip
+        if (!Input.GetMouseButtonDown(0)) return;
+
+        
+        Vector3 mousePos = MousePos();
+        Collider2D hitCollider = Physics2D.OverlapPoint(mousePos);
+        //Nothing found
+        if (hitCollider == null) return;
+        //Go fish button clicked
+        if (hitCollider.gameObject == goFishButton)
+        {
+            //Find out if lying
+            int index = hand.FindRank(hand.deck, gm.request.rank);
+            //Lying
+            if (index >= 0)
+            {
+                DisplayGoFish();
+                GameManager.instance.GoFish();
+                CheatManager.instance.SetCurrentTurnCardGiven(false);
+                CheatManager.instance.SetCurrentTurnRequestInOppositeHand(true);
+                GameManager.instance.ChangeTurnPhase(TurnPhase.TakeCard);
+                goFishButton.SetActive(false);
+                return;
+            }
+            //Truthful
+            else
+            {
+                DisplayGoFish();
+                GameManager.instance.GoFish();
+                CheatManager.instance.SetCurrentTurnCardGiven(false);
+                CheatManager.instance.SetCurrentTurnRequestInOppositeHand(false);
+                goFishButton.SetActive(false);
+                GameManager.instance.ChangeTurnPhase(TurnPhase.TakeCard);
+                return;
+            }
+        }
+
+        //Card clicked
+        CardObject co = hitCollider.gameObject.GetComponent<CardObject>();
+        if (co != null)
+        {
+            //skip if selected not set
+            if (selected.card1 < 0) return;
+
+            //Remove card from deck(s) and give to manager
+            Card card = Card.Copy(hand.deck[selected.card1]);
+            hand.deck.RemoveAt(selected.card1);
+            RemoveCard(selected.card1);
+            GameManager.instance.GiveCard(card);
+            CheatManager.instance.SetCurrentTurnCardGiven(true);
+            CheatManager.instance.SetCurrentTurnRequestInOppositeHand(true);
+            goFishButton.SetActive(false);
+            GameManager.instance.ChangeTurnPhase(TurnPhase.TakeCard);
+        }
+
+    }
+
+    private void TakeCard()
+    {
+        //Highlight possible positions to place card in
+        CheckGhostCardPlacement();
+
+        //If no button click, skip
+        if (!Input.GetMouseButtonDown(0)) return;
+
+        //Add request asnwer to deck(s)
+        int i = ghostCardIndex;
+        hand.deck.Insert(i, Card.Copy(gm.requestAnswer));
+        AddCard(gm.requestAnswer.rank, gm.requestAnswer.suit, i);
+
+        //Reset ghost card stuff
+        DestroyGhostCard();
+        UpdateCardPositions();
+
+        //Handle game/cheat manager stuff
+        CheatManager.instance.SetCurrentTurnAddedCardIndex(i);
+        GameManager.instance.ChangeTurnPhase(TurnPhase.PlacePair);
+
     }
 
     private void DrawCard()
@@ -144,19 +273,20 @@ public class PlayerHand : MonoBehaviour
 
     private void CheckGhostCardPlacement()
     {
-        //Compare mouse X to card placement
-        Vector3 mouseScreenPosition = Input.mousePosition;
+        ////Compare mouse X to card placement
+        //Vector3 mouseScreenPosition = Input.mousePosition;
 
-        // Set the Z value to a desired distance from the camera (e.g., 10 units)
-        // or set to Camera.main.nearClipPlane for a close point
-        mouseScreenPosition.z = 10f;
+        //// Set the Z value to a desired distance from the camera (e.g., 10 units)
+        //// or set to Camera.main.nearClipPlane for a close point
+        //mouseScreenPosition.z = 10f;
 
-        // Convert the screen position to world space
-        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(mouseScreenPosition);
+        //// Convert the screen position to world space
+        //Vector3 worldPosition = mainCamera.ScreenToWorldPoint(mouseScreenPosition);
 
-        // For 2D games, you might want to force the Z to 0
-        worldPosition.z = 0f; 
-        float mouseX = worldPosition.x;
+        //// For 2D games, you might want to force the Z to 0
+        //worldPosition.z = 0f; 
+        Vector3 mousePos = MousePos();
+        float mouseX = mousePos.x;
         int replaceIndex = FindGhostCardIndex(mouseX);
         Debug.Log(mouseX);
         //Debug.Log(replaceIndex);
@@ -213,6 +343,74 @@ public class PlayerHand : MonoBehaviour
         return 0;
     }
 
+    private Vector3 MousePos()
+    {
+        //Compare mouse X to card placement
+        Vector3 mouseScreenPosition = Input.mousePosition;
 
+        // Set the Z value to a desired distance from the camera (e.g., 10 units)
+        // or set to Camera.main.nearClipPlane for a close point
+        mouseScreenPosition.z = 10f;
+
+        // Convert the screen position to world space
+        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(mouseScreenPosition);
+
+        // For 2D games, you might want to force the Z to 0
+        worldPosition.z = 0f;
+        return worldPosition;
+    }
+
+    private int FindCardObject(GameObject co)
+    {
+        for (int i = 0; i < cardObjects.Count; i++)
+        {
+            if (co == cardObjects[i])
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void DisplayCardRequest(Card card)
+    {
+        requestBubble.SetActive(true);
+        requestBubble.GetComponent<RequestBubble>().SetRank(card.rank);
+    }
+
+    private void DisplayGoFish()
+    {
+        goFishBubble.SetActive(true);
+    }
+
+    //Updates selectable card 1 and places a highlight over it
+    private void HighlightCard1()
+    {
+        Vector3 mousePos = MousePos();
+        Collider2D hitCollider = Physics2D.OverlapPoint(mousePos);
+        if (hitCollider == null) { selected.card1 = -1; highlightCard1.SetActive(false); return; }
+        CardObject co = hitCollider.gameObject.GetComponent<CardObject>();
+        if (co == null) { selected.card1 = -1; highlightCard1.SetActive(false); return; }
+        //If selectable card not found yet
+        if (selected.card1 < 0)
+        {
+            //Find index of object it corresponds to adn save it
+            int ind = FindCardObject(co.gameObject);
+            if (ind == -1) return;
+            selected.card1 = ind;
+            //Place highlight
+            highlightCard1.SetActive(true);
+            Vector3 pos = co.transform.position;
+            pos.z -= 5f;
+            highlightCard1.transform.position = pos;
+        }
+    }
+
+    private void RemoveCard(int i)
+    {
+        GameObject go = cardObjects[i];
+        cardObjects.RemoveAt(i);
+        Destroy(go);
+    }
 
 }
